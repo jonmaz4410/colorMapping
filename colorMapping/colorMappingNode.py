@@ -117,21 +117,24 @@ class colorMappingNode(Node):
             self.cv_image = self.bridge.imgmsg_to_cv2(image_msg, 'bgra8')
             self.get_logger().info('Image retrieved successfully')
             self.latest_image_timestamp = self.get_clock().now().to_msg()
+            self.need_image = False
         except CvBridgeError as e:
             print("Error converting between ROS Image and OpenCV image:", e)
 
-        self.need_image = False
-
-        self.get_logger().info("Received pointcloud")
+        self.get_logger().info("Entering pointcloud callback")
 
         # Extract x, y, and z from structured array. Optional: ring, intensity
-        xyz = point_cloud2.read_points(cloud=pcl2_msg,
-                                       field_names=('x', 'y', 'z'),
-                                       reshape_organized_cloud=True)
-
-        x = xyz['x']
-        y = xyz['y']
-        z = xyz['z']
+        try: 
+            xyz = point_cloud2.read_points(cloud=pcl2_msg,
+                                           field_names=('x', 'y', 'z'),
+                                           reshape_organized_cloud=True)
+            x = xyz['x']
+            y = xyz['y']
+            z = xyz['z']
+        except:
+            self.get_logger().info("Failed to retrieve pointcloud")
+            return
+ 
 
         # Stack the columns to create array of shape (n, 3)
         lidar_points = np.column_stack((x, y, z))
@@ -141,10 +144,9 @@ class colorMappingNode(Node):
 
         #dx, dy, and dz are the amounts you would like to translate pointcloud (in meters)
         translated_lidar_points = self.manual_translation(lidar_points, dx = 0, dy = -.11, dz = 0)
-        lidar_points = translated_lidar_points
 
         # Filter points based on angle (Currently 50 degrees filters all incorrect points)
-        lidar_points = self.filter_by_angle(lidar_points)  # Optional param: limiting_angle
+        lidar_points = self.filter_by_angle(translated_lidar_points)  # Optional param: limiting_angle
 
         
         if not self.need_info:
@@ -183,11 +185,12 @@ class colorMappingNode(Node):
         print('Percentage of lidar points remaining after being filtered:',
               np.around((filtered_size / original_size*100), 2), '%')
 
+
+
+#3. Filter points based upon the given angles of Lidar to match ZED (roughly)
     # To avoid extra data processing, I noticed all of my points out of bounds were due to
     # the lidar capturing more data horizontally than the image.
     # This is one method of filtering that should be less computationally expensive.
-
-#3. Filter points based upon the given angles of Lidar to match ZED (roughly)
     def filter_by_angle(self, lidar_points, limiting_angle=50):
         angle_array_w = np.arctan2(lidar_points[:, 1], lidar_points[:, 0])
         # This was calculated experimentally

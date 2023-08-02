@@ -1,0 +1,63 @@
+[0.000000] (-) TimerEvent: {}
+[0.000084] (colorMapping) JobQueued: {'identifier': 'colorMapping', 'dependencies': OrderedDict()}
+[0.000106] (colorMapping) JobStarted: {'identifier': 'colorMapping'}
+[0.099329] (-) TimerEvent: {}
+[0.199562] (-) TimerEvent: {}
+[0.299757] (-) TimerEvent: {}
+[0.399972] (-) TimerEvent: {}
+[0.500303] (-) TimerEvent: {}
+[0.600722] (-) TimerEvent: {}
+[0.700975] (-) TimerEvent: {}
+[0.801418] (-) TimerEvent: {}
+[0.901850] (-) TimerEvent: {}
+[1.002284] (-) TimerEvent: {}
+[1.102518] (-) TimerEvent: {}
+[1.202978] (-) TimerEvent: {}
+[1.303455] (-) TimerEvent: {}
+[1.403889] (-) TimerEvent: {}
+[1.504329] (-) TimerEvent: {}
+[1.604559] (-) TimerEvent: {}
+[1.705054] (-) TimerEvent: {}
+[1.805300] (-) TimerEvent: {}
+[1.905515] (-) TimerEvent: {}
+[2.005953] (-) TimerEvent: {}
+[2.106377] (-) TimerEvent: {}
+[2.206602] (-) TimerEvent: {}
+[2.229415] (colorMapping) Command: {'cmd': ['/usr/bin/python3', 'setup.py', 'develop', '--editable', '--build-directory', '/home/jonmaz/ros2_ws/src/colorMapping/build/colorMapping/build', '--no-deps', 'install_data'], 'cwd': '/home/jonmaz/ros2_ws/src/colorMapping/build/colorMapping', 'env': {'GJS_DEBUG_TOPICS': 'JS ERROR;JS LOG', 'LESSOPEN': '| /usr/bin/lesspipe %s', 'USER': 'jonmaz', 'XDG_SESSION_TYPE': 'x11', 'SHLVL': '1', 'LD_LIBRARY_PATH': '/home/jonmaz/ros2_ws/install/zed_topic_benchmark_component/lib:/home/jonmaz/ros2_ws/install/zed_topic_benchmark_interfaces/lib:/home/jonmaz/ros2_ws/install/zed_rgb_convert/lib:/home/jonmaz/ros2_ws/install/zed_components/lib:/home/jonmaz/ros2_ws/install/rviz_plugin_zed_od/lib:/home/jonmaz/ros2_ws/install/zed_interfaces/lib:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib', 'HOME': '/home/jonmaz', 'OLDPWD': '/home/jonmaz/ros2_ws/src', 'DESKTOP_SESSION': 'ubuntu', 'GIO_LAUNCHED_DESKTOP_FILE': '/usr/share/applications/terminator.desktop', 'ROS_PYTHON_VERSION': '3', 'GNOME_SHELL_SESSION_MODE': 'ubuntu', 'GTK_MODULES': 'gail:atk-bridge', 'MANAGERPID': '1297', 'SYSTEMD_EXEC_PID': '2720', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/1000/bus', 'COLORTERM': 'truecolor', 'TERMINATOR_DBUS_NAME': 'net.tenshu.Terminator21a9d5db22c73a993ff0b42f64b396873', 'GIO_LAUNCHED_DESKTOP_FILE_PID': '6243', 'COLCON_PREFIX_PATH': '/home/jonmaz/ros2_ws/install', 'ROS_DISTRO': 'humble', 'GTK_IM_MODULE': 'ibus', 'LOGNAME': 'jonmaz', 'JOURNAL_STREAM': '8:35198', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'XDG_SESSION_CLASS': 'user', 'USERNAME': 'jonmaz', 'TERM': 'xterm-256color', 'GNOME_DESKTOP_SESSION_ID': 'this-is-deprecated', 'ROS_LOCALHOST_ONLY': '0', 'WINDOWPATH': '2', 'PATH': '/opt/ros/humble/bin:/home/jonmaz/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin', 'SESSION_MANAGER': 'local/jonmaz-GL65-Leopard-10SDR:@/tmp/.ICE-unix/2682,unix/jonmaz-GL65-Leopard-10SDR:/tmp/.ICE-unix/2682', 'INVOCATION_ID': '1ec52a371a464caebfd25a1660e0e30c', 'XDG_MENU_PREFIX': 'gnome-', 'XDG_RUNTIME_DIR': '/run/user/1000', 'DISPLAY': ':0', 'TERMINATOR_DBUS_PATH': '/net/tenshu/Terminator2', 'LANG': 'en_US.UTF-8', 'XDG_CURRENT_DESKTOP': 'ubuntu:GNOME', 'IBUS_DISABLE_SNOOPER': '1', 'XMODIFIERS': '@im=ibus', 'XDG_SESSION_DESKTOP': 'ubuntu', 'XAUTHORITY': '/run/user/1000/gdm/Xauthority', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:', 'SSH_AGENT_LAUNCHER': 'gnome-keyring', 'SSH_AUTH_SOCK': '/run/user/1000/keyring/ssh', 'AMENT_PREFIX_PATH': '/home/jonmaz/ros2_ws/install/zed_ros2:/home/jonmaz/ros2_ws/install/zed_multi_camera:/home/jonmaz/ros2_ws/install/zed_display_rviz2:/home/jonmaz/ros2_ws/install/zed_wrapper:/home/jonmaz/ros2_ws/install/zed_tutorial_pos_tracking:/home/jonmaz/ros2_ws/install/zed_tutorial_depth:/home/jonmaz/ros2_ws/install/zed_topic_benchmark:/home/jonmaz/ros2_ws/install/zed_topic_benchmark_component:/home/jonmaz/ros2_ws/install/zed_rgb_convert:/home/jonmaz/ros2_ws/install/zed_components:/home/jonmaz/ros2_ws/install/rviz_plugin_zed_od:/home/jonmaz/ros2_ws/install/zed_interfaces:/home/jonmaz/ros2_ws/install/my_py_pkg:/home/jonmaz/ros2_ws/install/colorMapping:/home/jonmaz/ros2_ws/install/AHC:/opt/ros/humble', 'SHELL': '/bin/bash', 'TERMINATOR_UUID': 'urn:uuid:9916fb8b-c8b9-4e58-8fdf-aaa67f375ec5', 'QT_ACCESSIBILITY': '1', 'GDMSESSION': 'ubuntu', 'LESSCLOSE': '/usr/bin/lesspipe %s %s', 'GPG_AGENT_INFO': '/run/user/1000/gnupg/S.gpg-agent:0:1', 'GJS_DEBUG_OUTPUT': 'stderr', 'QT_IM_MODULE': 'ibus', 'PWD': '/home/jonmaz/ros2_ws/src/colorMapping/build/colorMapping', 'XDG_CONFIG_DIRS': '/etc/xdg/xdg-ubuntu:/etc/xdg', 'XDG_DATA_DIRS': '/usr/share/ubuntu:/usr/share/gnome:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop', 'PYTHONPATH': '/home/jonmaz/ros2_ws/src/colorMapping/build/colorMapping/prefix_override:/home/jonmaz/ros2_ws/src/colorMapping/install/colorMapping/lib/python3.10/site-packages:/home/jonmaz/ros2_ws/install/zed_interfaces/local/lib/python3.10/dist-packages:/home/jonmaz/ros2_ws/build/my_py_pkg:/home/jonmaz/ros2_ws/install/my_py_pkg/lib/python3.10/site-packages:/home/jonmaz/ros2_ws/build/colorMapping:/home/jonmaz/ros2_ws/install/colorMapping/lib/python3.10/site-packages:/home/jonmaz/ros2_ws/build/AHC:/home/jonmaz/ros2_ws/install/AHC/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages', 'COLCON': '1', 'VTE_VERSION': '6800', 'CMAKE_PREFIX_PATH': '/home/jonmaz/ros2_ws/install/zed_ros2:/home/jonmaz/ros2_ws/install/zed_multi_camera:/home/jonmaz/ros2_ws/install/zed_display_rviz2:/home/jonmaz/ros2_ws/install/zed_wrapper:/home/jonmaz/ros2_ws/install/zed_tutorial_video:/home/jonmaz/ros2_ws/install/zed_tutorial_pos_tracking:/home/jonmaz/ros2_ws/install/zed_tutorial_depth:/home/jonmaz/ros2_ws/install/zed_topic_benchmark:/home/jonmaz/ros2_ws/install/zed_topic_benchmark_component:/home/jonmaz/ros2_ws/install/zed_topic_benchmark_interfaces:/home/jonmaz/ros2_ws/install/zed_rgb_convert:/home/jonmaz/ros2_ws/install/zed_components:/home/jonmaz/ros2_ws/install/rviz_plugin_zed_od:/home/jonmaz/ros2_ws/install/zed_interfaces'}, 'shell': False}
+[2.306701] (-) TimerEvent: {}
+[2.406938] (-) TimerEvent: {}
+[2.457163] (colorMapping) StdoutLine: {'line': b'running develop\n'}
+[2.507256] (-) TimerEvent: {}
+[2.607477] (-) TimerEvent: {}
+[2.707748] (-) TimerEvent: {}
+[2.808039] (-) TimerEvent: {}
+[2.905488] (colorMapping) StdoutLine: {'line': b'running egg_info\n'}
+[2.905663] (colorMapping) StdoutLine: {'line': b'creating colorMapping.egg-info\n'}
+[2.905852] (colorMapping) StdoutLine: {'line': b'writing colorMapping.egg-info/PKG-INFO\n'}
+[2.906046] (colorMapping) StdoutLine: {'line': b'writing dependency_links to colorMapping.egg-info/dependency_links.txt\n'}
+[2.906242] (colorMapping) StdoutLine: {'line': b'writing entry points to colorMapping.egg-info/entry_points.txt\n'}
+[2.906435] (colorMapping) StdoutLine: {'line': b'writing requirements to colorMapping.egg-info/requires.txt\n'}
+[2.906543] (colorMapping) StdoutLine: {'line': b'writing top-level names to colorMapping.egg-info/top_level.txt\n'}
+[2.906838] (colorMapping) StdoutLine: {'line': b"writing manifest file 'colorMapping.egg-info/SOURCES.txt'\n"}
+[2.908095] (-) TimerEvent: {}
+[2.908966] (colorMapping) StdoutLine: {'line': b"reading manifest file 'colorMapping.egg-info/SOURCES.txt'\n"}
+[2.909636] (colorMapping) StdoutLine: {'line': b"writing manifest file 'colorMapping.egg-info/SOURCES.txt'\n"}
+[2.950016] (colorMapping) StdoutLine: {'line': b'running build_ext\n'}
+[2.950364] (colorMapping) StdoutLine: {'line': b'Creating /home/jonmaz/ros2_ws/src/colorMapping/install/colorMapping/lib/python3.10/site-packages/colorMapping.egg-link (link to .)\n'}
+[2.951375] (colorMapping) StdoutLine: {'line': b'Installing color_mapping script to /home/jonmaz/ros2_ws/src/colorMapping/install/colorMapping/lib/colorMapping\n'}
+[2.951619] (colorMapping) StdoutLine: {'line': b'Installing extrinsic_calibration script to /home/jonmaz/ros2_ws/src/colorMapping/install/colorMapping/lib/colorMapping\n'}
+[2.951892] (colorMapping) StdoutLine: {'line': b'\n'}
+[2.952069] (colorMapping) StdoutLine: {'line': b'Installed /home/jonmaz/ros2_ws/src/colorMapping/build/colorMapping\n'}
+[2.952239] (colorMapping) StdoutLine: {'line': b'running install_data\n'}
+[2.952438] (colorMapping) StdoutLine: {'line': b'creating /home/jonmaz/ros2_ws/src/colorMapping/install/colorMapping/share/ament_index\n'}
+[2.952579] (colorMapping) StdoutLine: {'line': b'creating /home/jonmaz/ros2_ws/src/colorMapping/install/colorMapping/share/ament_index/resource_index\n'}
+[2.952772] (colorMapping) StdoutLine: {'line': b'creating /home/jonmaz/ros2_ws/src/colorMapping/install/colorMapping/share/ament_index/resource_index/packages\n'}
+[2.952938] (colorMapping) StdoutLine: {'line': b'copying resource/colorMapping -> /home/jonmaz/ros2_ws/src/colorMapping/install/colorMapping/share/ament_index/resource_index/packages\n'}
+[2.953093] (colorMapping) StdoutLine: {'line': b'copying package.xml -> /home/jonmaz/ros2_ws/src/colorMapping/install/colorMapping/share/colorMapping\n'}
+[2.986628] (colorMapping) CommandEnded: {'returncode': 0}
+[3.008230] (-) TimerEvent: {}
+[3.108497] (-) TimerEvent: {}
+[3.208773] (-) TimerEvent: {}
+[3.309004] (-) TimerEvent: {}
+[3.376665] (colorMapping) JobEnded: {'identifier': 'colorMapping', 'rc': 0}
+[3.377288] (-) EventReactorShutdown: {}

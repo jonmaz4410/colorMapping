@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'color_mapping = colorMapping.colorMappingNode:main'
+            'color_mapping = colorMapping.colorMappingNode:main',
+            'extrinsic_calibration = colorMapping.extrinsicCalibrationNode:main'
         ],
     },
 )

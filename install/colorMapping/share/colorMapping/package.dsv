@@ -1,0 +1,9 @@
+source;share/colorMapping/hook/pythonpath.ps1
+source;share/colorMapping/hook/pythonpath.dsv
+source;share/colorMapping/hook/pythonpath.sh
+source;share/colorMapping/hook/ament_prefix_path.ps1
+source;share/colorMapping/hook/ament_prefix_path.dsv
+source;share/colorMapping/hook/ament_prefix_path.sh
+source;../../build/colorMapping/share/colorMapping/hook/pythonpath_develop.ps1
+source;../../build/colorMapping/share/colorMapping/hook/pythonpath_develop.dsv
+source;../../build/colorMapping/share/colorMapping/hook/pythonpath_develop.sh

@@ -1,0 +1,4 @@
+[console_scripts]
+color_mapping = colorMapping.colorMappingNode:main
+extrinsic_calibration = colorMapping.extrinsicCalibrationNode:main
+

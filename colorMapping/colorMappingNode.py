@@ -2,6 +2,7 @@
 
 import rclpy
 from rclpy.node import Node
+from rclpy.time import Time
 from sensor_msgs.msg import Image, CameraInfo, PointCloud2, PointField
 import numpy as np
 from image_geometry import PinholeCameraModel
@@ -9,17 +10,57 @@ from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs_py import point_cloud2
 from message_filters import ApproximateTimeSynchronizer, Subscriber
 from rclpy.qos import qos_profile_sensor_data, QoSProfile, QoSDurabilityPolicy, QoSReliabilityPolicy, QoSHistoryPolicy
-
+from std_msgs.msg import Header
 
 #Not Currently being used
 # import spatialmath as sm
 # from scipy.spatial.transform import Rotation
-# from std_msgs.msg import Header
+
 # import timeit
 # import cv2
 # import open3d as o3d
 # from geometry_msgs.msg import Point
 
+
+########################################################################################################################
+### Name:   Jonathan Mazurkiewicz
+### Topic:  USV Perception Stack Design
+### Task:   Read data from an image and pointcloud message, publish new point cloud with color
+### Dates:  June 2023 - August 2023
+### 
+### Notes:  1. Uses ROS2 / rclpy to get information. Uses ZED 2i Stereovision camera and Velodyne M1600 Lidar
+###
+###         2. There is a choice between the image_geometry model and the openCV model for projection. Comment out
+###         whichever one you aren't using! If you select openCV, follow comments in cameraInfo callback.
+###
+###         3. Takes advantage of Numpy arrays, Boolean indexing, and slicing for near-optimal speed
+###
+###         4. Currently, messages between pointcloud and image are roughly 0.02 to 0.28 seconds apart. This can cause
+###         issues with the new pointcloud. Adjust the argument in ApproximateTimeSynchronizer as needed.
+###
+###         5. Code is modular. All of the work is done inside of functions except for printing time difference. See member
+###         functions for analysis.
+###
+###         6. Currently, extrinsic calibration has not been performed between Lidar and Zed. There exists another node
+###         in this package called extrinsicCalibrationNode.py. To perform calibration, run this node while capturing data
+###         of a checkerboard simultaneously from various angles, It will only need to be done one time. Then, take the translation
+###         vector and pass it to the manual_translation() function as dx, dy, and dz. Currently, there is not a function to handle
+###         the rotation matrix or distortion coefficients. If there is a rotation, I recommend uncommenting scipy package above and
+###         using functions from there OR using openCV model which takes rotation matrix as an argument.
+###
+###         7. This code subscribes to an already rectified image for improved projection accuracy.
+###
+###         8. filter_by_angle() and is_within_bounds() are meant to do the same job: get rid of projected points that would cause
+###         errors. For speed, consider only using one or the other. filter_by_angle gets rid of all points that lie outside of the 
+###         specified angle and provides 100% correct filtration when using an angle of 50 degrees. is_within_bounds() will always
+###         catch the projected points that are incorrect, but may be more computationally intensive.
+
+### Future: 1. ZED SDK offers a way to provide time alignment with external sensors in its interface. This could provide a more
+###         elegant and accurate way to align the messages from point cloud and image.
+###
+###         2. During abrupt jerky motions, rgb values are not being grabbed correctly. The point cloud is being published but there
+###         is an offset that has not been fixed yet.  
+########################################################################################################################
 
 class colorMappingNode(Node):
 
@@ -32,20 +73,28 @@ class colorMappingNode(Node):
         # Declarations
         #####################################################################################
         self.camera_matrix = None
-        self.latest_image = None
-        self.latest_pcl = None
         # Set flags to synchronize data
         self.need_info = True
         self.need_image = True
+
         # Declare base image size for later calculations
         self.image_height = 512
         self.image_width = 896
+
         # CV Bridge to be used later for image processing
         self.bridge = CvBridge()
 
         # Pinhole Camera model to perform 3d -> 2d projection
         self.model = PinholeCameraModel()
-        self.publishing_rate = 6
+
+        #Declare the fields for the published point cloud at the end. Constant
+        self.fields = [
+            PointField(name='x', offset=0, datatype=PointField.FLOAT32, count=1),
+            PointField(name='y', offset=4, datatype=PointField.FLOAT32, count=1),
+            PointField(name='z', offset= 8, datatype=PointField.FLOAT32, count=1),
+            PointField(name='rgb', offset=12, datatype=PointField.UINT32, count=1),
+        ]
+
 
         #When doing time sync, the publisher requires a valid QoS profile. Without this,
         #pointcloud was not able to publish at all.
@@ -53,7 +102,7 @@ class colorMappingNode(Node):
             reliability=QoSReliabilityPolicy.RELIABLE,
             durability=QoSDurabilityPolicy.VOLATILE,
             history=QoSHistoryPolicy.KEEP_LAST,
-            depth=10  # Set the depth to the desired value
+            depth=20  # Set the depth to the desired value
         )
 
         #####################################################################################
@@ -72,14 +121,14 @@ class colorMappingNode(Node):
         self.sub_pcl = Subscriber(self, PointCloud2, '/lidar_0/m1600/pcl2', qos_profile=qos_profile_sensor_data)
 
         #Synchronize PCL + RGB. ARGS ([subscriptions], queue_size, time_window)
-        self.ts = ApproximateTimeSynchronizer([self.sub_image_rgb, self.sub_pcl], 30, .01)
+        self.time_sync = ApproximateTimeSynchronizer([self.sub_image_rgb, self.sub_pcl], 30, .08)
+        self.time_sync.registerCallback(self.callback_sync)
 
-        self.ts.registerCallback(self.callback)
         #####################################################################################
         # Publishers
         #####################################################################################
         self.pub_pcl = self.create_publisher(
-            PointCloud2, '/lidar_0/rgb_points/testing', qos_profile)
+            PointCloud2, '/rgb_pointcloud', qos_profile)
 
         self.get_logger().info("color_mapping node has initialized successfully")
 
@@ -88,9 +137,10 @@ class colorMappingNode(Node):
     #####################################################################################
 
     ### Camera parameter callback -- only to be done one time upon startup###
+    ### Gathers camera intrinsics from the ZED
     def callback_info_left(self, info):
         if self.need_info:
-            self.get_logger().info('Inside info callback 1: Gathering left cam info')
+            self.get_logger().info('Inside camera info callback')
 
             # Gather camera intrinsic parameters and save to pinhole model.
             self.model.fromCameraInfo(info)
@@ -110,41 +160,49 @@ class colorMappingNode(Node):
     ##########################################################################################
     # Pointcloud and image synchronized callback + processing
 
-    def callback(self, image_msg, pcl2_msg):
+    def callback_sync(self, image_msg, pcl2_msg):
+
         self.get_logger().info('Entering image callback')
 
+        ###Retrieving data from image and pointcloud messages with exception handling
         try:
             self.cv_image = self.bridge.imgmsg_to_cv2(image_msg, 'bgra8')
-            self.get_logger().info('Image retrieved successfully')
-            self.latest_image_timestamp = self.get_clock().now().to_msg()
+            self.get_logger().info('Image retrieved successfully!')            
             self.need_image = False
         except CvBridgeError as e:
-            print("Error converting between ROS Image and OpenCV image:", e)
+            self.get_logger().warn("Error converting between ROS Image and OpenCV image:" .format(e))
 
         self.get_logger().info("Entering pointcloud callback")
 
-        # Extract x, y, and z from structured array. Optional: ring, intensity
-        try: 
+        
+        try:
+            # Extract x, y, and z from structured array. Optional: ring, intensity
             xyz = point_cloud2.read_points(cloud=pcl2_msg,
                                            field_names=('x', 'y', 'z'),
                                            reshape_organized_cloud=True)
             x = xyz['x']
             y = xyz['y']
             z = xyz['z']
-        except:
-            self.get_logger().info("Failed to retrieve pointcloud")
+            self.get_logger().info('Pointcloud retrieved successfully!')            
+
+        except Exception as e:
+            self.get_logger().info("Failed to retrieve pointcloud: {}".format(e))
             return
- 
+        
+        #Printing time difference between messages
+        self.image_timestamp = image_msg.header.stamp.sec + (image_msg.header.stamp.nanosec * 1e-9)
+        self.pcl2_timestamp = pcl2_msg.header.stamp.sec + (pcl2_msg.header.stamp.nanosec * 1e-9)
+        self.time_difference = abs(self.image_timestamp - self.pcl2_timestamp)
+        self.get_logger().info(f"Time difference between messages: {self.time_difference: .5f} seconds")
 
         # Stack the columns to create array of shape (n, 3)
         lidar_points = np.column_stack((x, y, z))
 
         #Manual translation of point cloud coordinates to attempt extrinsic calibration
-        translated_lidar_points = np.empty_like(lidar_points.shape)
-
         #dx, dy, and dz are the amounts you would like to translate pointcloud (in meters)
+        translated_lidar_points = np.empty_like(lidar_points.shape)
         translated_lidar_points = self.manual_translation(lidar_points, dx = 0, dy = -.11, dz = 0)
-
+        
         # Filter points based on angle (Currently 50 degrees filters all incorrect points)
         lidar_points = self.filter_by_angle(translated_lidar_points)  # Optional param: limiting_angle
 
@@ -170,7 +228,7 @@ class colorMappingNode(Node):
 #1. Filter out pixel values that are not in bounds of the image height and width
     def is_within_bounds(self, pixel_coords, lidar_points):
 
-        # Mask = Pixel coords that are negative or out of bounds
+        # Mask = Pixel coords that are negative or greater than max width or length
         mask = (pixel_coords[:, 0] >= 0) & (pixel_coords[:, 0] < self.image_width - 1) & \
             (pixel_coords[:, 1] >= 0) & (pixel_coords[:, 1] < self.image_height - 1)
         
@@ -182,8 +240,9 @@ class colorMappingNode(Node):
 
 #2. Print percentage of points that passed filtering
     def filter_percentage(self, original_size, filtered_size):
-        print('Percentage of lidar points remaining after being filtered:',
-              np.around((filtered_size / original_size*100), 2), '%')
+        percentage = np.around((filtered_size / original_size * 100), 2)
+        self.get_logger().info(f'Percentage of lidar points remaining after being filtered: {percentage:.2f}%')
+
 
 
 
@@ -248,13 +307,6 @@ class colorMappingNode(Node):
 #7. Publish pointcloud
     def publish_point_cloud(self, xyz_values, rgb_values):
 
-        fields = [
-            PointField(name='x', offset=0, datatype=PointField.FLOAT32, count=1),
-            PointField(name='y', offset=4, datatype=PointField.FLOAT32, count=1),
-            PointField(name='z', offset= 8, datatype=PointField.FLOAT32, count=1),
-            PointField(name='rgb', offset=12, datatype=PointField.UINT32, count=1),
-        ]
-
         num_points = len(xyz_values)
 
         # Create structured array with datatypes that we want for rgb image and labels
@@ -272,11 +324,12 @@ class colorMappingNode(Node):
         points['rgb'] = rgb_values
 
         # Create the PointCloud2 message
+        # Currently, I have selected the left camera frame. This may need to change in the future.
         msg = PointCloud2()
         msg.header.frame_id = 'zed2i_left_camera_frame'
         msg.height = 1
         msg.width = num_points
-        msg.fields = fields
+        msg.fields = self.fields
         msg.is_bigendian = False
         msg.point_step = 16  # 3 (xyz) + 1 (rgb)
         msg.row_step = msg.point_step * num_points
@@ -291,15 +344,16 @@ class colorMappingNode(Node):
 
 
 def main(args=None):
-
     rclpy.init(args=args)
-    node = colorMappingNode()  # MODIFY NAME
-    rclpy.spin(node)
-    rclpy.shutdown()
-
-
-if __name__ == "__main__":
-    main()
+    node = colorMappingNode()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass  # Handle keyboard interrupt (Ctrl+C)
+    finally:
+        # Clean up resources and shutdown ROS 2
+        node.destroy_node()
+        rclpy.shutdown()
 
 
 ##########################################################

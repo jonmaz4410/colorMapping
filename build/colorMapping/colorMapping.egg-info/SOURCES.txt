@@ -1,0 +1,14 @@
+package.xml
+setup.cfg
+setup.py
+colorMapping/__init__.py
+colorMapping/colorMappingNode.py
+colorMapping/extrinsicCalibrationNode.py
+colorMapping.egg-info/PKG-INFO
+colorMapping.egg-info/SOURCES.txt
+colorMapping.egg-info/dependency_links.txt
+colorMapping.egg-info/entry_points.txt
+colorMapping.egg-info/requires.txt
+colorMapping.egg-info/top_level.txt
+colorMapping.egg-info/zip-safe
+resource/colorMapping

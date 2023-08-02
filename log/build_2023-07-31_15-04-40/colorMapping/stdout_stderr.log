@@ -1,0 +1,23 @@
+running develop
+running egg_info
+creating colorMapping.egg-info
+writing colorMapping.egg-info/PKG-INFO
+writing dependency_links to colorMapping.egg-info/dependency_links.txt
+writing entry points to colorMapping.egg-info/entry_points.txt
+writing requirements to colorMapping.egg-info/requires.txt
+writing top-level names to colorMapping.egg-info/top_level.txt
+writing manifest file 'colorMapping.egg-info/SOURCES.txt'
+reading manifest file 'colorMapping.egg-info/SOURCES.txt'
+writing manifest file 'colorMapping.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/jonmaz/ros2_ws/src/colorMapping/install/colorMapping/lib/python3.10/site-packages/colorMapping.egg-link (link to .)
+Installing color_mapping script to /home/jonmaz/ros2_ws/src/colorMapping/install/colorMapping/lib/colorMapping
+Installing extrinsic_calibration script to /home/jonmaz/ros2_ws/src/colorMapping/install/colorMapping/lib/colorMapping
+
+Installed /home/jonmaz/ros2_ws/src/colorMapping/build/colorMapping
+running install_data
+creating /home/jonmaz/ros2_ws/src/colorMapping/install/colorMapping/share/ament_index
+creating /home/jonmaz/ros2_ws/src/colorMapping/install/colorMapping/share/ament_index/resource_index
+creating /home/jonmaz/ros2_ws/src/colorMapping/install/colorMapping/share/ament_index/resource_index/packages
+copying resource/colorMapping -> /home/jonmaz/ros2_ws/src/colorMapping/install/colorMapping/share/ament_index/resource_index/packages
+copying package.xml -> /home/jonmaz/ros2_ws/src/colorMapping/install/colorMapping/share/colorMapping

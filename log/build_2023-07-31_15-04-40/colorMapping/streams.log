@@ -1,0 +1,25 @@
+[2.230s] Invoking command in '/home/jonmaz/ros2_ws/src/colorMapping/build/colorMapping': PYTHONPATH=/home/jonmaz/ros2_ws/src/colorMapping/build/colorMapping/prefix_override:/home/jonmaz/ros2_ws/src/colorMapping/install/colorMapping/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/jonmaz/ros2_ws/src/colorMapping/build/colorMapping/build --no-deps install_data
+[2.457s] running develop
+[2.905s] running egg_info
+[2.906s] creating colorMapping.egg-info
+[2.906s] writing colorMapping.egg-info/PKG-INFO
+[2.906s] writing dependency_links to colorMapping.egg-info/dependency_links.txt
+[2.906s] writing entry points to colorMapping.egg-info/entry_points.txt
+[2.906s] writing requirements to colorMapping.egg-info/requires.txt
+[2.906s] writing top-level names to colorMapping.egg-info/top_level.txt
+[2.907s] writing manifest file 'colorMapping.egg-info/SOURCES.txt'
+[2.909s] reading manifest file 'colorMapping.egg-info/SOURCES.txt'
+[2.910s] writing manifest file 'colorMapping.egg-info/SOURCES.txt'
+[2.950s] running build_ext
+[2.950s] Creating /home/jonmaz/ros2_ws/src/colorMapping/install/colorMapping/lib/python3.10/site-packages/colorMapping.egg-link (link to .)
+[2.951s] Installing color_mapping script to /home/jonmaz/ros2_ws/src/colorMapping/install/colorMapping/lib/colorMapping
+[2.952s] Installing extrinsic_calibration script to /home/jonmaz/ros2_ws/src/colorMapping/install/colorMapping/lib/colorMapping
+[2.952s] 
+[2.952s] Installed /home/jonmaz/ros2_ws/src/colorMapping/build/colorMapping
+[2.952s] running install_data
+[2.952s] creating /home/jonmaz/ros2_ws/src/colorMapping/install/colorMapping/share/ament_index
+[2.953s] creating /home/jonmaz/ros2_ws/src/colorMapping/install/colorMapping/share/ament_index/resource_index
+[2.953s] creating /home/jonmaz/ros2_ws/src/colorMapping/install/colorMapping/share/ament_index/resource_index/packages
+[2.953s] copying resource/colorMapping -> /home/jonmaz/ros2_ws/src/colorMapping/install/colorMapping/share/ament_index/resource_index/packages
+[2.953s] copying package.xml -> /home/jonmaz/ros2_ws/src/colorMapping/install/colorMapping/share/colorMapping
+[2.989s] Invoked command in '/home/jonmaz/ros2_ws/src/colorMapping/build/colorMapping' returned '0': PYTHONPATH=/home/jonmaz/ros2_ws/src/colorMapping/build/colorMapping/prefix_override:/home/jonmaz/ros2_ws/src/colorMapping/install/colorMapping/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/jonmaz/ros2_ws/src/colorMapping/build/colorMapping/build --no-deps install_data

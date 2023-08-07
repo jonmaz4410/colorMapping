@@ -11,13 +11,14 @@ from sensor_msgs_py import point_cloud2
 from message_filters import ApproximateTimeSynchronizer, Subscriber
 from rclpy.qos import qos_profile_sensor_data, QoSProfile, QoSDurabilityPolicy, QoSReliabilityPolicy, QoSHistoryPolicy
 from std_msgs.msg import Header
+import cv2
 
 #Not Currently being used
 # import spatialmath as sm
 # from scipy.spatial.transform import Rotation
 
 # import timeit
-# import cv2
+
 # import open3d as o3d
 # from geometry_msgs.msg import Point
 
@@ -35,8 +36,8 @@ from std_msgs.msg import Header
 ###
 ###         3. Takes advantage of Numpy arrays, Boolean indexing, and slicing for near-optimal speed
 ###
-###         4. Currently, messages between pointcloud and image are roughly 0.02 to 0.28 seconds apart. This can cause
-###         issues with the new pointcloud. Adjust the argument in ApproximateTimeSynchronizer as needed.
+###         4. Messages between pointcloud and image are roughly 0.02 to 0.28 seconds apart. This can cause problems with the new point cloud
+###         Adjust the argument in ApproximateTimeSynchronizer as needed.
 ###
 ###         5. Code is modular. All of the work is done inside of functions except for printing time difference. See member
 ###         functions for analysis.
@@ -45,21 +46,28 @@ from std_msgs.msg import Header
 ###         in this package called extrinsicCalibrationNode.py. To perform calibration, run this node while capturing data
 ###         of a checkerboard simultaneously from various angles, It will only need to be done one time. Then, take the translation
 ###         vector and pass it to the manual_translation() function as dx, dy, and dz. Currently, there is not a function to handle
-###         the rotation matrix or distortion coefficients. If there is a rotation, I recommend uncommenting scipy package above and
-###         using functions from there OR using openCV model which takes rotation matrix as an argument.
+###         the rotation matrix or distortion coefficients with pinholeCamera() model. If there is a rotation, I recommend uncommenting 
+###         scipy package above and using functions from there OR using openCV model which takes rotation matrix as an argument.
 ###
-###         7. This code subscribes to an already rectified image for improved projection accuracy.
+###         7. This code subscribes to an already rectified image for improved projection accuracy (dist coeff. (0,0,0)).
 ###
 ###         8. filter_by_angle() and is_within_bounds() are meant to do the same job: get rid of projected points that would cause
 ###         errors. For speed, consider only using one or the other. filter_by_angle gets rid of all points that lie outside of the 
 ###         specified angle and provides 100% correct filtration when using an angle of 50 degrees. is_within_bounds() will always
 ###         catch the projected points that are incorrect, but may be more computationally intensive.
+###         
+###         9. In the project3dtoPixel() function, I am passing x, y, and z in a different order to account for the rotation
+###         from the world frame to the optical frame. If a rotation matrix is used, for example, from the extrinsic calibration node,
+###         it may not work properly as it is. 
+###
+###         10. The openCV model should be superior to the pinholeCamera model. It does not require any for loops and is able to process
+###         the entire image at once. For future development, I would recommend to move forward with openCV
 
 ### Future: 1. ZED SDK offers a way to provide time alignment with external sensors in its interface. This could provide a more
 ###         elegant and accurate way to align the messages from point cloud and image.
 ###
 ###         2. During abrupt jerky motions, rgb values are not being grabbed correctly. The point cloud is being published but there
-###         is an offset that has not been fixed yet.  
+###         is an offset of the rgb values that has not been fixed yet.  
 ########################################################################################################################
 
 class colorMappingNode(Node):
@@ -136,8 +144,8 @@ class colorMappingNode(Node):
     # Callback functions
     #####################################################################################
 
-    ### Camera parameter callback -- only to be done one time upon startup###
-    ### Gathers camera intrinsics from the ZED
+    # Camera parameter callback -- only to be done one time upon startup###
+    # Gathers camera intrinsics from the ZED
     def callback_info_left(self, info):
         if self.need_info:
             self.get_logger().info('Inside camera info callback')
@@ -147,15 +155,15 @@ class colorMappingNode(Node):
             # Reset need_info, gathering camera info only needs to be done once.
             self.need_info = False
 
-            #ONLY NEEDED IF NOT USING PINHOLE MODEL
-            # # Get focal point and principal point coordinates from cameraInfo, then turn into matrix
-            # self.fx = info.k[0]
-            # self.fy = info.k[4]
-            # self.cx = info.k[2]
-            # self.cy = info.k[5]
-            # self.camera_matrix = np.array([[self.fx, 0, self.cx],
-            #                                [0, self.fy, self.cy],
-            #                                [0,       0,      1]])
+            # ONLY NEEDED IF NOT USING PINHOLE MODEL
+            # Get focal point and principal point coordinates from cameraInfo, then turn into matrix
+            self.fx = info.k[0]
+            self.fy = info.k[4]
+            self.cx = info.k[2]
+            self.cy = info.k[5]
+            self.camera_matrix = np.array([[self.fx, 0, self.cx],
+                                           [0, self.fy, self.cy],
+                                           [0,       0,      1]])
 
     ##########################################################################################
     # Pointcloud and image synchronized callback + processing
@@ -186,7 +194,7 @@ class colorMappingNode(Node):
             self.get_logger().info('Pointcloud retrieved successfully!')            
 
         except Exception as e:
-            self.get_logger().info("Failed to retrieve pointcloud: {}".format(e))
+            self.get_logger().warn("Failed to retrieve pointcloud: {}".format(e))
             return
         
         #Printing time difference between messages
@@ -198,19 +206,41 @@ class colorMappingNode(Node):
         # Stack the columns to create array of shape (n, 3)
         lidar_points = np.column_stack((x, y, z))
 
-        #Manual translation of point cloud coordinates to attempt extrinsic calibration
-        #dx, dy, and dz are the amounts you would like to translate pointcloud (in meters)
-        translated_lidar_points = np.empty_like(lidar_points.shape)
-        translated_lidar_points = self.manual_translation(lidar_points, dx = 0, dy = -.11, dz = 0)
+        #############################################################################################################
+        # # # USING PINHOLECAMERA MODEL -- COMMENT OUT THIS BLOCK IF USING OPENCV INSTEAD
+
+        # # Manual translation of point cloud coordinates to attempt extrinsic calibration
+        # # dx, dy, and dz are the amounts you would like to translate pointcloud (in meters)
+        # translated_lidar_points = np.empty_like(lidar_points.shape)
+        # translated_lidar_points = self.manual_translation(lidar_points, dx = 0, dy = -.11, dz = 0)
         
-        # Filter points based on angle (Currently 50 degrees filters all incorrect points)
-        lidar_points = self.filter_by_angle(translated_lidar_points)  # Optional param: limiting_angle
+        # # Filter points based on angle (Currently 50 degrees filters all incorrect points)
+        # translated_lidar_points = self.filter_by_angle(translated_lidar_points)  # Optional param: limiting_angle
 
         
+        # if not self.need_info:
+        #     # Obtain u,v pixel coordinates from projection
+        #     pixel_coordinates = self.project3dtoPixel(translated_lidar_points)
+        #     #Filter out lidar points that produce incorrect pixel values
+        #     valid_pixel_coordinates, valid_lidar_points = self.is_within_bounds(pixel_coordinates, translated_lidar_points)
+        #     breakpoint()
+        #     #Print the percentage of valid points
+        #     self.filter_percentage(pixel_coordinates.shape[0], valid_pixel_coordinates.shape[0])
+        #     if not self.need_image:
+        #         # Grab rgb values from all pixel coordinates u,v
+        #         rgb_values = self.grab_pixel_rgb(valid_pixel_coordinates)
+        #         # Publish new point cloud
+        #         self.publish_point_cloud(valid_lidar_points, rgb_values)
+        
+        #############################################################################################################
+        # USING OPENCV MODEL -- COMMENT OUT THIS BLOCK IF USING PINHOLECAMERA MODEL INSTEAD
+
         if not self.need_info:
-            # Obtain u,v pixel coordinates from projection
-            pixel_coordinates = self.project3dtoPixel(lidar_points)
-            #Filter out lidar points that produce incorrect pixel values
+        
+            #Filter by angle. Currently 50 degrees filters all incorrect points. Consider only using is_within_bounds()
+            lidar_points = self.filter_by_angle(lidar_points)
+
+            pixel_coordinates = self.openCV_projectPoints(lidar_points)
             valid_pixel_coordinates, valid_lidar_points = self.is_within_bounds(pixel_coordinates, lidar_points)
             #Print the percentage of valid points
             self.filter_percentage(pixel_coordinates.shape[0], valid_pixel_coordinates.shape[0])
@@ -220,9 +250,10 @@ class colorMappingNode(Node):
                 # Publish new point cloud
                 self.publish_point_cloud(valid_lidar_points, rgb_values)
 
-    #####################################################################################
-    # Supplementary functions
-    #####################################################################################
+
+########################################################################################
+# Supplementary functions
+########################################################################################
 
 
 #1. Filter out pixel values that are not in bounds of the image height and width
@@ -342,6 +373,35 @@ class colorMappingNode(Node):
 
         return self
 
+#8. openCV package for projection
+
+    def openCV_projectPoints(self, lidar_points):
+
+        #Rotate the lidar points from the world to optical frame by passing -y, -z, x instead of x, y, z    
+        rotated_lidar_points = np.empty_like(lidar_points)
+        rotated_lidar_points = np.column_stack((-lidar_points[:, 1], -lidar_points[:, 2], lidar_points[:, 0]))
+
+        #Rotation vector declared as empty float array of shape 3x1. (Can also be a 3x3 matrix). Each value is an angle in degrees to rotate about that axis (x, y, z). Update with values from calibration.
+        rotation_vector = np.array([0.0, 0.0, 0.0])
+
+        #Translation vector declared as empty float array of shape 3x1. Update with values from calibration.
+        translation_vector = np.array([.12, 0, 0])
+
+        # Obtain u,v pixel coordinates from projection
+        # Currently, since using a rectified image, there will not be distortion coefficients.
+        pixel_coordinates, _ = cv2.projectPoints(objectPoints=rotated_lidar_points,
+                                                    rvec=rotation_vector,
+                                                    tvec=translation_vector,
+                                                    cameraMatrix=self.camera_matrix,
+                                                    distCoeffs=None
+                                                    )
+        
+        #Squeeze dimensionality to obtain data in useable format
+        pixel_coordinates = pixel_coordinates.squeeze()
+        #Round and convert to int
+        pixel_coordinates = np.around(pixel_coordinates).astype(int)
+        return pixel_coordinates
+
 
 def main(args=None):
     rclpy.init(args=args)
@@ -354,26 +414,3 @@ def main(args=None):
         # Clean up resources and shutdown ROS 2
         node.destroy_node()
         rclpy.shutdown()
-
-
-##########################################################
-# Solution 1 -- using openCV to project 3D onto 2D -- NEEDS WORK
-##########################################################
-
-        # pixel_coordinates, _ = cv2.projectPoints(objectPoints=lidar_points,
-        #                                          rvec=self.rotation_matrix_shrunk,
-        #                                          tvec=(0, 0, 0),
-        #                                          cameraMatrix=self.camera_matrix,
-        #                                          distCoeffs=None
-        #                                          #aspectRatio=(512/896)
-        #                                         )
-
-        # pixel_coordinates = pixel_coordinates.squeeze()
-
-        # filtered_points_x = pixel_coordinates[pixel_coordinates[:, 0] < self.image_width]
-        # filtered_points = filtered_points_x[filtered_points_x[:, 1] < self.image_height]
-
-        # filtered_size = filtered_points.shape[0]
-        # original_size = pixel_coordinates.shape[0]
-        # print('Percentage of points that fall within image boundary: ', int(filtered_size / original_size*100), '%')
-        # breakpoint()

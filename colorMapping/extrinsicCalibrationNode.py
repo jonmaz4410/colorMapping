@@ -27,10 +27,11 @@ class ExtrinsicCalibrationNode(Node):
         self.calibration_complete = False
 
         qos_profile_sync = QoSProfile(
-        reliability=QoSReliabilityPolicy.RELIABLE,
-        history=QoSHistoryPolicy.KEEP_LAST,
-        depth=10
-        )       
+            reliability=QoSReliabilityPolicy.RELIABLE,
+            durability=QoSDurabilityPolicy.VOLATILE,
+            history=QoSHistoryPolicy.KEEP_LAST,
+            depth=20  # Set the depth to the desired value
+        )     
 
         # Subscriber to gather CameraInfo parameters from left camera
         self.sub_cam_info_left = self.create_subscription(
@@ -53,7 +54,7 @@ class ExtrinsicCalibrationNode(Node):
         # Synchronize RGB image and point cloud
         self.time_sync = ApproximateTimeSynchronizer([self.sub_image_raw, self.sub_pcl],
                                                       30,
-                                                      1)
+                                                      .08)
         
         self.time_sync.registerCallback(self.callback_time_sync)
 

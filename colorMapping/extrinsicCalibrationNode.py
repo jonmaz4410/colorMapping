@@ -21,8 +21,8 @@ class ExtrinsicCalibrationNode(Node):
         self.bridge = CvBridge()
         self.image_height = 512
         self.image_width = 896
-        self.board_size = (6, 9)  # Change this to your actual checkerboard size
-        self.square_size = 0.04  # Change this to the actual square size in meters
+        self.board_size = (6, 8)  # Change this to your actual checkerboard size
+        self.square_size = 0.0254  # Change this to the actual square size in meters
         self.calibration_data = []  # List to store calibration data
         self.calibration_complete = False
 
@@ -44,7 +44,7 @@ class ExtrinsicCalibrationNode(Node):
         # Subscribers to raw RGB image and point cloud
         self.sub_image_raw = Subscriber(self,
                                         Image,
-                                        '/zed2i/zed_node/left_raw/image_raw_gray',
+                                        '/zed2i/zed_node/left_raw/image_raw_color',
                                         qos_profile=qos_profile_sync)
         self.sub_pcl = Subscriber(self,
                                   PointCloud2,
@@ -70,20 +70,35 @@ class ExtrinsicCalibrationNode(Node):
             
             try:
                 cv_image = self.bridge.imgmsg_to_cv2(image_msg, 'bgra8')
+                gray_image = cv2.cvtColor(cv_image, cv2.COLOR_RGBA2GRAY)  # Convert to grayscale
+
 
             except Exception as e:
                 self.get_logger().error(
                     "Error converting between ROS Image and OpenCV image: {}".format(e))
                 return
+            
+            flags = cv2.CALIB_CB_ADAPTIVE_THRESH | cv2.CALIB_CB_NORMALIZE_IMAGE | cv2.CALIB_CB_FILTER_QUADS
+
 
             # Detect checkerboard corners in the raw RGB image
             ret, corners = cv2.findChessboardCorners(
-                cv_image, self.board_size, None)
+                gray_image, self.board_size, flags)
+
 
             if ret:
                 # Convert checkerboard corners to sub-pixel accuracy
-                cv2.cornerSubPix(cv_image, corners, (11, 11), (-1, -1),
+                self.get_logger().info("Found chessboard!")
+                cv2.cornerSubPix(gray_image, corners, (15, 15), (-1,-1), 
                                  criteria=(cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001))
+
+            # Draw the corners on the image
+                cv2.drawChessboardCorners(cv_image, self.board_size, corners, ret)
+
+            # Display the image
+                cv2.imshow("Checkerboard Corners", cv_image)
+                cv2.waitKey(0)
+                cv2.destroyAllWindows()
 
                 # Generate checkerboard points in 3D space (assuming z=0)
                 checkerboard_points = np.zeros(
@@ -105,7 +120,7 @@ class ExtrinsicCalibrationNode(Node):
                 self.get_logger().error("Error reading point cloud data: {}".format(e))
                 return
 
-            if len(self.calibration_data) > 20:
+            if len(self.calibration_data) > 30:
                 self.calibrate_extrinsics()
                 self.calibration_complete = True
 
@@ -127,9 +142,9 @@ class ExtrinsicCalibrationNode(Node):
         # Print out the extrinsic calibration results
         self.get_logger().info("Extrinsic Calibration Results:")
         self.get_logger().info("Rotation Matrix:")
-        self.get_logger().info(self.rotation_matrix)
+        print(self.rotation_matrix)
         self.get_logger().info("Translation Vector:")
-        self.get_logger().info(self.translation_vector)
+        print(self.translation_vector)
         self.get_logger().info("")
 
         img_points_projected, _ = cv2.projectPoints(obj_points,

@@ -21,16 +21,16 @@ In addition, extrinsic calibration still needs to be performed. See comments ins
 
 There are in-depth comments inside of the code itself. As of August 15, 2023:
 
-color_mapping.py 
-      1. is resource efficient. Boolean indexing, slicing, and other techniques prevent the need for any for loops / list comprehensions.
-      2. accurately grabs color from pixels, reads from a point cloud, and forms correspondance between pixel and pointcloud. Then, publishes new cloud with rgb.
-      3. still needs proper extrinsic calibration for even better results. Currently, a manual translation is being performed to better line up data.
+color_mapping.py <br>
+      1. is resource efficient. Boolean indexing, slicing, and other techniques prevent the need for any for loops / list comprehensions. <br>
+      2. accurately grabs color from pixels, reads from a point cloud, and forms correspondance between pixel and pointcloud. Then, publishes new cloud with rgb. <br>
+      3. still needs proper extrinsic calibration for even better results. Currently, a manual translation is being performed to better line up data. <br>
       4. is complete.
 
-extrinsic_calibration.py
-      1. is not complete.
-      2. correctly finds checkerboard in an image.
-      3. does not incorporate lidar / point cloud yet.
+extrinsic_calibration.py<br>
+      1. is not complete.<br>
+      2. correctly finds checkerboard in an image.<br>
+      3. does not incorporate lidar / point cloud yet.<br><br>
 
 If you have any questions, please send me an email at jonmaz4410@gmail.com and I will be happy to assist further. Good luck!
 

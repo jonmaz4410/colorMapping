@@ -10,6 +10,27 @@ import numpy as np
 import cv2
 from rclpy.qos import qos_profile_sensor_data ,QoSProfile, QoSDurabilityPolicy, QoSReliabilityPolicy, QoSHistoryPolicy
 
+########################################################################################################################
+### Name:   Jonathan Mazurkiewicz
+### Topic:  USV Perception Stack Design
+### Task:   Perform extrinsic calibration between lidar and camera
+### Dates:  June 2023 - August 2023
+### 
+### Notes:  1. Uses ApproximateTimeSynchronizer() to ensure timestamps match up between messages.
+###
+###         2. Uses a point cloud, an image, and camera intrinsic parameters
+###
+###         3. Adapt board size and pattern to your current set up. Exact measurements for size, count internal vertices in row, column format for pattern.
+###
+###         4. Uncomment cv2.imshow() to be able to visually see if the algorithm is properly finding checkerboard corners.
+###
+###         5. Uncomment error function at the bottom (IN PROGRESS) to test reprojection error.
+###
+###         6. There are many ways to perform extrinsic calibration. This is only a start. It does not incorporate the lidar yet. Consider using this code ONLY as a skeleton.
+###         The eventual solution will involve much more work, finding a way to achieve correspondance between checkerboard corner in image and pointcloud, reprojecting for
+###         error estimation, and getting EXACT time alignment.
+########################################################################################################################
+
 
 class ExtrinsicCalibrationNode(Node):
     def __init__(self):
@@ -61,6 +82,7 @@ class ExtrinsicCalibrationNode(Node):
         self.calibration_complete = False
 
     def callback_info_left(self, info):
+        #Camera intrinsic matrix
         if self.camera_matrix is None:
             self.camera_matrix = np.array(info.k).reshape(3, 3)
             self.distortion_coeffs = np.array(info.d)
@@ -84,6 +106,9 @@ class ExtrinsicCalibrationNode(Node):
                 x = xyz['x']
                 y = xyz['y']
                 z = xyz['z']
+
+                # lidar_points stores the point cloud data in an organized fashion. rotated_lidar_points performs the rotation from the world to optical frame for alignment.
+                # Consider a better solution in the future.
                 lidar_points = np.column_stack((x, y, z))
                 rotated_lidar_points = np.column_stack((-y, -z, x))
 
@@ -101,13 +126,15 @@ class ExtrinsicCalibrationNode(Node):
             if ret:
                 # Convert checkerboard corners to sub-pixel accuracy
                 self.get_logger().info("Found chessboard!")
+                # When I changed subpixel window, I began to be able to find the right checkerboard corners. It needed to be smaller since our image is low resolution. If a higher
+                # resolution image is used, consider experimenting with the parameters in the function below.
                 cv2.cornerSubPix(gray_image, corners, (3, 3), (-1,-1), 
                                  criteria=(cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001))
 
             # Draw the corners on the image
                 cv2.drawChessboardCorners(cv_image, self.board_size, corners, ret)
 
-            # Display the image
+            # Display the image -- USED TO CHECK IF CORRECT CORNERS WERE FOUND
                 # cv2.imshow("Checkerboard Corners", cv_image)
                 # cv2.waitKey(0)
                 # cv2.destroyAllWindows()
@@ -149,6 +176,8 @@ class ExtrinsicCalibrationNode(Node):
                 self.calibrate_extrinsics()
                 self.calibration_complete = True
 
+
+    #Experimental function. Meant to find checkerboard corners in the point cloud using Euclidean distance. Have not tested yet.
     def transform_corners_from_camera_to_lidar(self, corners, lidar_points):
         transformed_corners = []
         for corner in corners:
@@ -164,8 +193,9 @@ class ExtrinsicCalibrationNode(Node):
             obj_points.append(checkerboard_points)
             img_points.append(corners)
 
-        # Perform extrinsic calibration
-# Perform extrinsic calibration using solvePnP
+        # Perform extrinsic calibration using solvePnP
+        # Another option is to use calibrateCamera() from openCV. This will also estimate camera intrinsics. Experiment with both.
+
         _, self.rotation_vector, self.translation_vector = cv2.solvePnP(
         obj_points[0], img_points[0], self.camera_matrix, self.distortion_coeffs)
 
@@ -180,6 +210,8 @@ class ExtrinsicCalibrationNode(Node):
         self.get_logger().info("Translation Vector:")
         print(self.translation_vector)
         self.get_logger().info("")
+
+        ### Error function. Consider placing into a member function.
 
         # img_points_projected, _ = cv2.projectPoints(obj_points,
         #                                             self.rotation_vector,

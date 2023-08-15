@@ -4,7 +4,7 @@ This is a package built with rclpy / colcon / ROS2. Its purpose is to communicat
 
 In my profile, there exists a dockerfile (go back one directory to find it). This will include all of the required dependencies and is the preferred method for running this code.
 However, there were no overtly complicated steps for installing dependencies. If you do not want to use docker, install the packages used onto your system, add an entry for them in "package.xml" 
-e.g.  <depend>cv2</depend>, and you should be good to go.
+e.g.  "<depend>cv2</depend>", and you should be good to go.
 
 If you clone this code, check to make sure that the nodes have executable privelege. FROM CLI >> chmod +x <filename.py>
 

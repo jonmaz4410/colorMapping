@@ -15,22 +15,29 @@ The new pointcloud is published to the ZED optical frame. Consider experimenting
 Be very careful when messing with the QoS Profiles or if you change the QoS profile of subscribers or publishers. Since I am using ApproximateTimeSynchronizer(), if the QoS profiles do not match up,
 the subscriptions will never occur and will not give you an error code as to why. They just won't run. Consider having a secondary version of code that does not use approximateTimeSynchronizer() or TimeSynchronizer() and uses the a regular subscriber for troubleshooting.
 
-Currently, the subscribers are meant to filter out messages whose timestamps are not within .08 seconds of each other. This can be changed experimentally. <b>In the future, consider implementing the ZED SDK features for sensor fusion with external lidar. Visit <a>https://www.stereolabs.com/docs/sensors/time-synchronization/</a> for more info </b>
+Currently, the subscribers are meant to filter out messages whose timestamps are not within .08 seconds of each other. This can be changed experimentally. <b>In the future, consider implementing the ZED SDK features for sensor fusion with external lidar. Visit <a>https://www.stereolabs.com/docs/sensors/time-synchronization/</a> for more info. </b> I believe this is the real way to create true sensor fusion between lidar and camera.
 
 In addition, extrinsic calibration still needs to be performed. See comments inside extrinsic_calibration.py for more details.
 
 There are in-depth comments inside of the code itself. As of August 15, 2023:
 
-color_mapping.py <br>
-      1. is resource efficient. Boolean indexing, slicing, and other techniques prevent the need for any for loops / list comprehensions. <br>
-      2. accurately grabs color from pixels, reads from a point cloud, and forms correspondance between pixel and pointcloud. Then, publishes new cloud with rgb. <br>
-      3. still needs proper extrinsic calibration for even better results. Currently, a manual translation is being performed to better line up data. <br>
+color_mapping.py
+
+      1. is resource efficient. Boolean indexing, slicing, and other techniques prevent the need for any for loops / list comprehensions.
+      
+      2. accurately grabs color from pixels, reads from a point cloud, and forms correspondance between pixel and pointcloud. Then, publishes new cloud with rgb.
+      
+      3. still needs proper extrinsic calibration for even better results. Currently, a manual translation is being performed to better line up data.
+      
       4. is complete.
 
-extrinsic_calibration.py<br>
-      1. is not complete.<br>
-      2. correctly finds checkerboard in an image.<br>
-      3. does not incorporate lidar / point cloud yet.<br><br>
+extrinsic_calibration.py
+
+      1. is not complete.
+      
+      2. correctly finds checkerboard in an image
+      
+      3. does not incorporate lidar / point cloud yet.
 
 If you have any questions, please send me an email at jonmaz4410@gmail.com and I will be happy to assist further. Good luck!
 

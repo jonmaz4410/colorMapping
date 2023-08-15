@@ -10,12 +10,12 @@ If you clone this code, check to make sure that the nodes have executable privel
 To run, enter FROM CLI >> ros2 run colorMapping color_mapping OR
                        >> ros2 run colorMapping extrinsic_calibration
 
-The new pointcloud is published to the ZED optical frame. Consider experimenting with changing this frame to the new lidar_0 frame that was created by another team member. My approach is a temporary solution.
+The new pointcloud is published to the ZED optical frame. Consider experimenting with changing this frame to the new lidar_0 frame that was created by another team member or another frame for proper sensor fusion. My approach is a temporary solution.
 
 Be very careful when messing with the QoS Profiles or if you change the QoS profile of subscribers or publishers. Since I am using ApproximateTimeSynchronizer(), if the QoS profiles do not match up,
-the subscriptions will never occur and will not give you an error code as to why. Verify the code works and save an older version for troubleshooting.
+the subscriptions will never occur and will not give you an error code as to why. They just won't run. Consider having a secondary version of code that does not use approximateTimeSynchronizer() or TimeSynchronizer() and uses the a regular subscriber for troubleshooting.
 
-Currently, the subscribers are meant to filter out messages whose timestamps are not within .08 seconds. This can be changed experimentally. In the future, consider implementing the ZED SDK features for sensor fusion with external lidar. Visit <a>https://www.stereolabs.com/docs/ros2/</a> for more info
+Currently, the subscribers are meant to filter out messages whose timestamps are not within .08 seconds of each other. This can be changed experimentally. <b>In the future, consider implementing the ZED SDK features for sensor fusion with external lidar. Visit <a>https://www.stereolabs.com/docs/sensors/time-synchronization/</a> for more info </b>
 
 In addition, extrinsic calibration still needs to be performed. See comments inside extrinsic_calibration.py for more details.
 

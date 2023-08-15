@@ -207,40 +207,22 @@ class colorMappingNode(Node):
         lidar_points = np.column_stack((x, y, z))
 
         #############################################################################################################
-        # # USING PINHOLECAMERA MODEL -- COMMENT OUT THIS BLOCK IF USING OPENCV INSTEAD
+        # # # USING PINHOLECAMERA MODEL -- COMMENT OUT THIS BLOCK IF USING OPENCV INSTEAD
 
-        # Manual translation of point cloud coordinates to attempt extrinsic calibration
-        # dx, dy, and dz are the amounts you would like to translate pointcloud (in meters)
-        translated_lidar_points = np.empty_like(lidar_points.shape)
-        translated_lidar_points = self.manual_translation(lidar_points, dx = 0.0, dy = -0.12, dz = 0.0)
+        # # Manual translation of point cloud coordinates to attempt extrinsic calibration
+        # # dx, dy, and dz are the amounts you would like to translate pointcloud (in meters)
+        # translated_lidar_points = np.empty_like(lidar_points.shape)
+        # translated_lidar_points = self.manual_translation(lidar_points, dx = 0.0, dy = -0.11, dz = 0.0)
         
-        # Filter points based on angle (Currently 50 degrees filters all incorrect points)
-        translated_lidar_points = self.filter_by_angle(translated_lidar_points)  # Optional param: limiting_angle
+        # # Filter points based on angle (Currently 50 degrees filters all incorrect points)
+        # translated_lidar_points = self.filter_by_angle(translated_lidar_points)  # Optional param: limiting_angle
 
         
-        if not self.need_info:
-            # Obtain u,v pixel coordinates from projection
-            pixel_coordinates = self.project3dtoPixel(translated_lidar_points)
-            #Filter out lidar points that produce incorrect pixel values
-            valid_pixel_coordinates, valid_lidar_points = self.is_within_bounds(pixel_coordinates, translated_lidar_points)
-            #Print the percentage of valid points
-            self.filter_percentage(pixel_coordinates.shape[0], valid_pixel_coordinates.shape[0])
-            if not self.need_image:
-                # Grab rgb values from all pixel coordinates u,v
-                rgb_values = self.grab_pixel_rgb(valid_pixel_coordinates)
-                # Publish new point cloud
-                self.publish_point_cloud(valid_lidar_points, rgb_values)
-        
-        #############################################################################################################
-        # # USING OPENCV MODEL -- COMMENT OUT THIS BLOCK IF USING PINHOLECAMERA MODEL INSTEAD
-
         # if not self.need_info:
-        
-        #     #Filter by angle. Currently 50 degrees filters all incorrect points. Consider only using is_within_bounds()
-        #     lidar_points = self.filter_by_angle(lidar_points)
-
-        #     pixel_coordinates = self.openCV_projectPoints(lidar_points)
-        #     valid_pixel_coordinates, valid_lidar_points = self.is_within_bounds(pixel_coordinates, lidar_points)
+        #     # Obtain u,v pixel coordinates from projection
+        #     pixel_coordinates = self.project3dtoPixel(translated_lidar_points)
+        #     #Filter out lidar points that produce incorrect pixel values
+        #     valid_pixel_coordinates, valid_lidar_points = self.is_within_bounds(pixel_coordinates, translated_lidar_points)
         #     #Print the percentage of valid points
         #     self.filter_percentage(pixel_coordinates.shape[0], valid_pixel_coordinates.shape[0])
         #     if not self.need_image:
@@ -248,6 +230,24 @@ class colorMappingNode(Node):
         #         rgb_values = self.grab_pixel_rgb(valid_pixel_coordinates)
         #         # Publish new point cloud
         #         self.publish_point_cloud(valid_lidar_points, rgb_values)
+        
+        #############################################################################################################
+        # USING OPENCV MODEL -- COMMENT OUT THIS BLOCK IF USING PINHOLECAMERA MODEL INSTEAD
+
+        if not self.need_info:
+        
+            #Filter by angle. Currently 50 degrees filters all incorrect points. Consider only using is_within_bounds()
+            lidar_points = self.filter_by_angle(lidar_points)
+
+            pixel_coordinates = self.openCV_projectPoints(lidar_points)
+            valid_pixel_coordinates, valid_lidar_points = self.is_within_bounds(pixel_coordinates, lidar_points)
+            #Print the percentage of valid points
+            self.filter_percentage(pixel_coordinates.shape[0], valid_pixel_coordinates.shape[0])
+            if not self.need_image:
+                # Grab rgb values from all pixel coordinates u,v
+                rgb_values = self.grab_pixel_rgb(valid_pixel_coordinates)
+                # Publish new point cloud
+                self.publish_point_cloud(valid_lidar_points, rgb_values)
 
 
 ########################################################################################

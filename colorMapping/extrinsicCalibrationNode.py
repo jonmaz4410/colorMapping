@@ -22,7 +22,7 @@ class ExtrinsicCalibrationNode(Node):
         self.image_height = 512
         self.image_width = 896
         self.board_size = (6, 8)  # Change this to your actual checkerboard size
-        self.square_size = 0.0254  # Change this to the actual square size in meters
+        self.square_size = 0.025  # Change this to the actual square size in meters
         self.calibration_data = []  # List to store calibration data
         self.calibration_complete = False
 
@@ -44,7 +44,7 @@ class ExtrinsicCalibrationNode(Node):
         # Subscribers to raw RGB image and point cloud
         self.sub_image_raw = Subscriber(self,
                                         Image,
-                                        '/zed2i/zed_node/left_raw/image_raw_color',
+                                        '/zed2i/zed_node/left/image_rect_color',
                                         qos_profile=qos_profile_sync)
         self.sub_pcl = Subscriber(self,
                                   PointCloud2,
@@ -78,51 +78,84 @@ class ExtrinsicCalibrationNode(Node):
                     "Error converting between ROS Image and OpenCV image: {}".format(e))
                 return
             
-            flags = cv2.CALIB_CB_ADAPTIVE_THRESH | cv2.CALIB_CB_NORMALIZE_IMAGE | cv2.CALIB_CB_FILTER_QUADS
+            try:
+                xyz = point_cloud2.read_points(
+                    cloud=pcl2_msg, field_names=('x', 'y', 'z'), skip_nans=True, reshape_organized_cloud=True)
+                x = xyz['x']
+                y = xyz['y']
+                z = xyz['z']
+                lidar_points = np.column_stack((x, y, z))
+                rotated_lidar_points = np.column_stack((-y, -z, x))
+
+            except Exception as e:
+                self.get_logger().error("Error reading point cloud data: {}".format(e))
+                return
+            
+            flags = cv2.CALIB_CB_ADAPTIVE_THRESH | cv2.CALIB_CB_FAST_CHECK
 
 
             # Detect checkerboard corners in the raw RGB image
             ret, corners = cv2.findChessboardCorners(
                 gray_image, self.board_size, flags)
 
-
             if ret:
                 # Convert checkerboard corners to sub-pixel accuracy
                 self.get_logger().info("Found chessboard!")
-                cv2.cornerSubPix(gray_image, corners, (15, 15), (-1,-1), 
+                cv2.cornerSubPix(gray_image, corners, (3, 3), (-1,-1), 
                                  criteria=(cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001))
 
             # Draw the corners on the image
                 cv2.drawChessboardCorners(cv_image, self.board_size, corners, ret)
 
             # Display the image
-                cv2.imshow("Checkerboard Corners", cv_image)
-                cv2.waitKey(0)
-                cv2.destroyAllWindows()
+                # cv2.imshow("Checkerboard Corners", cv_image)
+                # cv2.waitKey(0)
+                # cv2.destroyAllWindows()
 
-                # Generate checkerboard points in 3D space (assuming z=0)
                 checkerboard_points = np.zeros(
                     (self.board_size[0] * self.board_size[1], 3), np.float32)
                 checkerboard_points[:, :2] = np.mgrid[0:self.board_size[0], 0:self.board_size[1]].T.reshape(-1, 2)
                 checkerboard_points *= self.square_size
 
+                # checkerboard_points = self.transform_corners_from_camera_to_lidar(corners, rotated_lidar_points)
+
+                # # Store checkerboard points and corners
+                # self.calibration_data.append((checkerboard_points, corners))
+                # corners_squeezed = corners.squeeze()
+                # cv_image_corners = cv_image.copy()
+                # for corner in corners_squeezed:
+                #     cv2.circle(cv_image_corners, tuple(corner), 5, (0, 0, 255), -1)
+
+                #     lidar_corners = np.array([point[:2] for point in checkerboard_points], dtype=np.int32)
+                #     lidar_image = np.zeros_like(cv_image)
+                # for corner in lidar_corners:
+                #     cv2.circle(lidar_image, tuple(corner), 5, (0, 255, 0), -1)
+
+                # # Display the images
+                #     cv2.imshow("Camera Corners", cv_image_corners)
+                #     cv2.imshow("LiDAR Corners", lidar_image)
+                #     cv2.waitKey(0)
+                #     cv2.destroyAllWindows()
+
                 # Store checkerboard points and corners
                 self.calibration_data.append((checkerboard_points, corners))
-            
+                
             else:
                 self.get_logger().info("Did not find a chessboard in this image")
 
-            try:
-                xyz = point_cloud2.read_points(
-                    cloud=pcl2_msg, field_names=('x', 'y', 'z'), skip_nans=True)
-                points_3d = np.array(list(xyz))
-            except Exception as e:
-                self.get_logger().error("Error reading point cloud data: {}".format(e))
-                return
 
-            if len(self.calibration_data) > 30:
+
+            if len(self.calibration_data) > 20:
                 self.calibrate_extrinsics()
                 self.calibration_complete = True
+
+    def transform_corners_from_camera_to_lidar(self, corners, lidar_points):
+        transformed_corners = []
+        for corner in corners:
+            closest_point_idx = np.argmin(np.linalg.norm(lidar_points[:, :2] - corner[0], axis=1))
+            transformed_corners.append(lidar_points[closest_point_idx])
+        return transformed_corners
+
 
     def calibrate_extrinsics(self):
         obj_points = []
@@ -132,9 +165,10 @@ class ExtrinsicCalibrationNode(Node):
             img_points.append(corners)
 
         # Perform extrinsic calibration
-        _, self.rotation_vector, self.translation_vector, _, _ = cv2.calibrateCamera(
-            obj_points, img_points, (self.image_width, self.image_height), self.camera_matrix, self.distortion_coeffs,
-            flags=cv2.CALIB_USE_INTRINSIC_GUESS | cv2.CALIB_FIX_K3)
+# Perform extrinsic calibration using solvePnP
+        _, self.rotation_vector, self.translation_vector = cv2.solvePnP(
+        obj_points[0], img_points[0], self.camera_matrix, self.distortion_coeffs)
+
 
         # Convert rotation vector to rotation matrix
         self.rotation_matrix, _ = cv2.Rodrigues(self.rotation_vector)
@@ -147,19 +181,19 @@ class ExtrinsicCalibrationNode(Node):
         print(self.translation_vector)
         self.get_logger().info("")
 
-        img_points_projected, _ = cv2.projectPoints(obj_points,
-                                                    self.rotation_vector,
-                                                    self.translation_vector,
-                                                    self.camera_matrix,
-                                                    self.distortion_coeffs)
+        # img_points_projected, _ = cv2.projectPoints(obj_points,
+        #                                             self.rotation_vector,
+        #                                             self.translation_vector,
+        #                                             self.camera_matrix,
+        #                                             self.distortion_coeffs)
 
-        total_error = 0
-        for i in range(len(img_points)):
-            error = cv2.norm(img_points[i], img_points_projected[i][0], cv2.NORM_L2) / len(img_points_projected[i][0])
-            total_error += error
+        # total_error = 0
+        # for i in range(len(img_points)):
+        #     error = cv2.norm(img_points[i], img_points_projected[i][0], cv2.NORM_L2) / len(img_points_projected[i][0])
+        #     total_error += error
 
-        mean_error = total_error / len(img_points)
-        self.get_logger().info("Mean Reprojection Error: {}".format(mean_error))
+        # mean_error = total_error / len(img_points)
+        # self.get_logger().info("Mean Reprojection Error: {}".format(mean_error))
         
 
 def main(args=None):
